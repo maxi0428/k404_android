@@ -13,7 +13,7 @@ class MyClass {
     var age = 40;
     val name2 = "이상용4"
 }
-
+//
 fun main(){
 
     val data15 : Array<Int> = Array(3,{0})
