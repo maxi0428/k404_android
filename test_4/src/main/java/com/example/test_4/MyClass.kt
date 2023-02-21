@@ -15,6 +15,55 @@ class MyClass {
 }
 //
 fun main(){
+    var data = "hi"
+    when (data){
+        "hi" -> println("data is hi")
+        "hi2" -> println("data is hi2")
+        else -> {
+            println("data is not valid")
+        }
+    }
+
+
+    var data00 = 10
+    val result = if(data00>0){
+        println("테스트")
+        true
+    } else{
+        println("else 테스트")
+        false
+    }
+    println("테스트 : $result")
+
+
+
+    //가변 길이의 리스트, 맵
+
+    val data18 = mutableMapOf<String, String>()
+    data18.set("key","value")
+    println(data18.get("key"))
+    // companion 클래스 타입 지정후 사용
+
+    val data17 = mutableListOf<Int>()
+    data17.add(1)
+    data17.add(2)
+    println(data17[0])
+
+    val data16 = intArrayOf(10,20,30)
+    val data26 = booleanArrayOf(true, false, true)
+
+    println(
+        """
+array size : ${data16.size}
+array data : ${data16[0]}, ${data16[1]}, ${data16.get(2)}
+            """
+    )
+    println(
+        """
+array size : ${data26.size}
+array data : ${data26[0]}, ${data26[1]}, ${data26.get(2)}
+            """
+    )
 
     val data15 : Array<Int> = Array(3,{0})
 
