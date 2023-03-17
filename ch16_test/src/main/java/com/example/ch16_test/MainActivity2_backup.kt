@@ -3,23 +3,23 @@ package com.example.ch16_test
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.example.ch16_test.databinding.ActivityMainBinding
-import java.io.*
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 
-class MainActivity : AppCompatActivity() {
+class MainActivity2_backup : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var filePath: String
     lateinit var file: String
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +33,6 @@ class MainActivity : AppCompatActivity() {
         val requestGalleryLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult())
         {
-
-//            var inputStream = contentResolver.openInputStream(it.data!!.data!!)
             try {
 // calculateInSampleSize : 사진의 크기를 적절히 화면 비율에 맞게 재조정하는 함수
                 val calRatio = calculateInSampleSize(
@@ -45,38 +43,61 @@ class MainActivity : AppCompatActivity() {
                 val option = BitmapFactory.Options()
                 option.inSampleSize = calRatio
 
-                // contentResolver -> 외부에 저장소에 접근시 권한이 필요가 없음.
-                // openInputStream -> 후 처리로 선택이 된 사진의 정보를 바이트 단위로 읽기
-                // inputStream 여기에 사진의 정보가 바이트 단위로 담겼다
                 // 넘어온 사진의 바이트로 읽은 객체 존재.
                 var inputStream = contentResolver.openInputStream(it.data!!.data!!)
 
-                // 조건 파일에 쓰기 작업을 아랫쪽에 함수로 뺐음
-                if (inputStream != null) {
-                    fileUpload(inputStream)
+                val bitmap = BitmapFactory.decodeStream(inputStream, null, option)
+
+                bitmap?.let {
+                    binding.userImageView.setImageBitmap(bitmap)
+                } ?: let{
+                    Log.d("kkang", "bitmap null")
                 }
-                //1)현재, 액티비티에서 , 파일을 선언
-                //2) fileupload 함수의 정의 부분에서, 매개변수1 : 사진첩에서 읽은 바이트 단위의 배열
-                //3) 두 매개변수 만들어서, : 파일로 쓰기 위한 실제 물리 파일.
-                //4) 실제 물리 파일에 사진의 이미지 저장.
-                //5) 실제 물리 파일의 경로를 알수 있음.
-                //6) 해당 경로의 uri를 알아내서.
-                //7) inputStream 담을 예정.
-                //8) bitmap 변환 작업.
-                //9) 붙이는 작업.
-
-                // 이걸로 기존에 사진첨에서 읽었던 바이트를 bitmap 변환해서, 해당 뷰에 붙이는 작업.
-                var inputStream2 = contentResolver.openInputStream(it.data!!.data!!)
-
-                //외부저장소 위치에 접근을 해서, inputStream으로 읽어야함.
-
-                val bitmap = BitmapFactory.decodeStream(inputStream2, null, option)
-                binding.userImageView.setImageBitmap(bitmap)
-
-
                 // 파일에 출력 하기.
 
+                val timeStamp: String =
+                    SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+                val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                val file = File.createTempFile(
+                    "LSYTEST_${timeStamp}_",
+                    ".jpg",
+                    storageDir
+                )
+                filePath = file.absolutePath
+                val photoURI: Uri = FileProvider.getUriForFile(
+                    this,
+                    "com.example.ch16_provider_test.fileprovider",
+                    file
+                )
 
+                // 갤러리에서 선택 된 사진를 it 으로 받았고,
+                // 위에서 사진의 정보를 바이트로 읽은 inputStream 존재.
+                // 내가 만든 임의의 파일에 쓰기 작업을 하는 코드.
+                try {
+                    val buff = ByteArray(1024 * 4)
+                    val os: OutputStream = FileOutputStream(file)
+                    while (true) {
+                        val readed: Int
+                        readed = inputStream!!.read(buff);
+
+                        if (readed == -1) {
+                            break;
+                        }
+                        os.write(buff, 0, readed);
+                        //write buff
+//                    downloaded += readed;
+                    }
+
+                    os.flush();
+                    os.close();
+
+                } catch (e: IOException) {
+                    e.printStackTrace();
+                } finally {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                }
 
 
             }catch (e: Exception){
@@ -115,7 +136,7 @@ class MainActivity : AppCompatActivity() {
             filePath = file.absolutePath
             val photoURI: Uri = FileProvider.getUriForFile(
                 this,
-                "com.example.ch16_test.fileprovider",
+                "com.example.ch16_provider_test.fileprovider",
                 file
             )
             Log.d("lsy","갤러리에서 선택한 사진 위치"+filePath.toString())
@@ -148,7 +169,7 @@ class MainActivity : AppCompatActivity() {
             filePath = file.absolutePath
             val photoURI: Uri = FileProvider.getUriForFile(
                 this,
-                "com.example.ch16_test.fileprovider",
+                "com.example.ch16_provider_test.fileprovider",
                 file
             )
             Log.d("lsy","카메라에서 촬영한 사진 위치"+filePath.toString())
@@ -191,59 +212,4 @@ class MainActivity : AppCompatActivity() {
         }
         return inSampleSize
     }
-
-
-    private fun fileUpload(inputStream: InputStream){
-        val timeStamp: String =
-            SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val file = File.createTempFile(
-            "LSYTEST_${timeStamp}_",
-            ".jpg",
-            storageDir
-        )
-        filePath = file.absolutePath
-        val photoURI: Uri = FileProvider.getUriForFile(
-            this,
-            "com.example.ch16_test.fileprovider",
-            file
-        )
-
-        // 갤러리에서 선택 된 사진를 it 으로 받았고,
-        // 위에서 사진의 정보를 바이트로 읽은 inputStream 존재.
-        // 내가 만든 임의의 파일에 쓰기 작업을 하는 코드.
-        try {
-
-            //buff 바이트 단위의 배열이고 지정한 크기 만큼으로 해서 전달용
-            val buff = ByteArray(1024 * 4)
-            // os -> file : 실제 저장이 될 파일의 위치, 해당 파일에 바이트로 파일에 쓰기 작업.
-            val os: OutputStream = FileOutputStream(file)
-            while (true) {
-                val readed: Int
-                readed = inputStream!!.read(buff);
-
-                if (readed == -1) {
-                    break;
-                }
-                os.write(buff, 0, readed);
-
-                //write buff
-//                    downloaded += readed;
-            }
-
-            os.flush();
-
-            os.close();
-
-        } catch (e: IOException) {
-            e.printStackTrace();
-        } finally {
-
-            if (inputStream != null) {
-
-                inputStream.close();
-            }
-        }
-    }
-
 }
