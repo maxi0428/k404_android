@@ -1,6 +1,5 @@
 package com.example.test17_t
 
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -12,11 +11,8 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import com.example.test17_t.databinding.ActivityMainBinding
-import java.io.BufferedReader
 import java.io.File
-import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,109 +20,39 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var filePath: String
 
-
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //회원 가입 창에서 입력한 정보를 가져와서, 뷰에 붙이는 작업.
+        // 공유 프리퍼런스에 값 가지고 오기.
+        val pref = getSharedPreferences("joinTest", Context.MODE_PRIVATE)
 
-        binding.button.setOnClickListener {
-            val inputp: String = binding.userImageView.setImageBitmap()
-            val input: String = binding.email.getText().toString()
-            val input2: String = binding.pw.getText().toString()
-            val intent: Intent = Intent(this, JoinActivity::class.java)
-            // 데이터를 같이 전달.
-            intent.putExtra("email", input )
-            intent.putExtra("pw", input2)
-            startActivity(intent)
+//        putString("email", userEmail)
+//        putString("password", userPassword)
+//        putString("imgfile", imgFilePath)
+        val userEmail : String? = pref.getString("email","값이 없으면 디폴트값이 옵니다.")
+        val userPassword : String? = pref.getString("password","값이 없으면 디폴트값이 옵니다.")
+        val userProfile : String? = pref.getString("imgfile","값이 없으면 디폴트값이 옵니다.")
+
+        binding.userEmail.setText(userEmail)
+        binding.userPassword.setText(userPassword)
+
+        // 사진의 이미지 크기 계산 부분 옵션
+        val calRatio = calculateInSampleSize(
+            Uri.fromFile(File(userProfile)),
+            resources.getDimensionPixelSize(R.dimen.imgSize),
+            resources.getDimensionPixelSize(R.dimen.imgSize)
+        )
+        val option = BitmapFactory.Options()
+
+        val bitmap = BitmapFactory.decodeFile(userProfile, option)
+        bitmap?.let {
+            binding.userImageView.setImageBitmap(bitmap)
         }
 
-
-        val requestGalleryLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult())
-        {
-            try {
-// calculateInSampleSize : 사진의 크기를 적절히 화면 비율에 맞게 재조정하는 함수
-                val calRatio = calculateInSampleSize(
-                    it.data!!.data!!,
-                    resources.getDimensionPixelSize(R.dimen.imgSize),
-                    resources.getDimensionPixelSize(R.dimen.imgSize)
-                )
-                val option = BitmapFactory.Options()
-                option.inSampleSize = calRatio
-
-                var inputStream = contentResolver.openInputStream(it.data!!.data!!)
-                val bitmap = BitmapFactory.decodeStream(inputStream, null, option)
-                inputStream!!.close()
-                inputStream = null
-
-                bitmap?.let {
-                    binding.userImageView.setImageBitmap(bitmap)
-                } ?: let{
-                    Log.d("kkang", "bitmap null")
-                }
-            }catch (e: Exception){
-                e.printStackTrace()
-            }
-        }
-
-        val requestCameraFileLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()){
-            val calRatio = calculateInSampleSize(
-                Uri.fromFile(File(filePath)),
-                resources.getDimensionPixelSize(R.dimen.imgSize),
-                resources.getDimensionPixelSize(R.dimen.imgSize)
-            )
-            val option = BitmapFactory.Options()
-            option.inSampleSize = calRatio
-            val bitmap = BitmapFactory.decodeFile(filePath, option)
-            bitmap?.let {
-                binding.userImageView.setImageBitmap(bitmap)
-            }
-        }
-
-        binding.cameraButton.setOnClickListener {
-            //camera app......................
-            //파일 준비...............
-            val timeStamp: String =
-                SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-            val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            val file = File.createTempFile(
-                "LSY${timeStamp}_",
-                ".jpg",
-                storageDir
-            )
-            filePath = file.absolutePath
-            val photoURI: Uri = FileProvider.getUriForFile(
-                this,
-                "com.example.test17_t.fileprovider",
-                //com.example.test17.fileprovider
-                file
-            )
-
-            val pref = getSharedPreferences("imgLoadTest", Context.MODE_PRIVATE)
-            pref.edit().run {
-                putString("imgfileUri", photoURI.toString())
-                putString("imgfile", filePath)
-                commit()
-            }
-            val resultStr2 : String? = pref.getString("imgUri","값이 없으면 디폴트값이 옵니다.")
-            val result3 = resultStr2.toString()
-            Log.d("lsy","imgInfo result3 결과 : $resultStr2")
-            Log.d("lsy","imgInfo result3 결과 : $result3")
-
-            val uriTest = Uri.fromFile(File(filePath))
-            Log.d("lsy"," filePath 경로 찍어보기"+uriTest.toString())
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            requestCameraFileLauncher.launch(intent)
-        }
     }
-
-
 
     private fun calculateInSampleSize(fileUri: Uri, reqWidth: Int, reqHeight: Int): Int {
         val options = BitmapFactory.Options()

@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
     android:orientation="vertical"
-    android:gravity="center">
+    tools:context=".JoinActivity">
+
     <androidx.cardview.widget.CardView
         android:layout_width="150dp"
         android:layout_height="150dp"
+        android:layout_gravity="center_horizontal"
         app:cardCornerRadius="75dp"
         app:cardElevation="0dp"
         >
@@ -23,29 +25,25 @@
     </androidx.cardview.widget.CardView>
 
 
-    <Button
-        android:id="@+id/cameraButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Camera App"
-        android:layout_marginTop="24dp"/>
 
-    <EditText
-        android:id="@+id/email"
-        android:hint="이메일을 입력해주세요"
-        android:textSize="20sp"
+    <TextView
+        android:id="@+id/userEmail"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    <EditText
-        android:id="@+id/pw"
-        android:textSize="20sp"
-        android:hint="패스워드를 입력해주세요"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="회원가입"/>
+        android:hint="이메일 값 불러오기"
+        android:inputType="textEmailAddress"
+        android:textSize="20sp"
+        />
+
+    <TextView
+        android:id="@+id/userPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="패스워드 값 불러오기"
+        android:inputType="textPassword"
+        android:textSize="20sp"
+        />
+
+
 
 </LinearLayout>
